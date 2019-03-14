@@ -672,7 +672,7 @@ class Repo2Docker(Application):
                                                     build_args)
 
                 if not self.dry_run:
-                        self.log.info('Using %s builder\n', bp.__class__.__name__,
+                    self.log.info('Using %s builder\n', bp.__class__.__name__,
                                   extra=dict(phase='building'))
 
                     for l in picked_buildpack.build(docker_client,
