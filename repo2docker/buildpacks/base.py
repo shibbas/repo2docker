@@ -465,9 +465,17 @@ class BuildPack:
             appendix=self.appendix,
         )
 
-    def build(self, client, image_spec, memory_limit, build_args, cache_from, extra_build_kwargs):
-        tarf = io.BytesIO()
-        tar = tarfile.open(fileobj=tarf, mode='w')
+    def generate_build_input(self, image_spec, save_build_input, build_args):
+
+        if save_build_input:
+            tar_file_name = os.path.join(save_build_input, image_spec.split(':', 1)[0].replace('/', '-').lower() + ".tar.gz")
+            tarf = None
+            self.log.info("Saving build input to '" + tar_file_name + "'")
+        else:
+            tar_file_name = None
+            tarf = io.BytesIO()
+
+        tar = tarfile.open(name=tar_file_name, fileobj=tarf, mode='w')
         dockerfile_tarinfo = tarfile.TarInfo("Dockerfile")
         dockerfile = self.render().encode('utf-8')
         dockerfile_tarinfo.size = len(dockerfile)
@@ -496,8 +504,15 @@ class BuildPack:
         tar.add('.', 'src/', filter=_filter_tar)
 
         tar.close()
-        tarf.seek(0)
+        if tarf is not None:
+            tarf.seek(0)
 
+        return tarf
+
+    def build(self, client, image_spec, memory_limit, build_args, cache_from, extra_build_kwargs):
+        tarf = self.generate_build_input(image_spec, False, build_args)
+        assert tarf is not None, "no buffer provided to save intermediate build input"
+        
         limits = {
             # Always disable memory swap for building, since mostly
             # nothing good can come of that.

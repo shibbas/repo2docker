@@ -198,6 +198,13 @@ def get_argparser():
         default=[],
     )
 
+     argparser.add_argument(
+        '--save-build-input',
+        dest='save_build_input',
+        type=str,
+        help=('Path to save the build input, i.e. the tar file so that it can be used by Docker directly.')
+    )
+
     return argparser
 
 argparser = get_argparser()
@@ -323,6 +330,9 @@ def make_r2d(argv=None):
 
     if args.target_repo_dir:
         r2d.target_repo_dir = args.target_repo_dir
+
+    if args.save_build_input:
+        r2d.save_build_input = args.save_build_input
 
     return r2d
 

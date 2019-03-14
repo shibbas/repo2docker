@@ -354,6 +354,16 @@ class Repo2Docker(Application):
         config=True
     )
 
+    save_build_input = Unicode(
+        '',
+        config=True,
+        help="""
+        Directory to save the build input to. Could be used in conjunction with --no-build to generate a build input to be used by docker or acr directly.
+
+        Defaults to None; build input is not saved.
+        """
+    )
+
     def fetch(self, url, ref, checkout_path):
         """Fetch the contents of `url` and place it in `checkout_path`.
 
@@ -648,14 +658,21 @@ class Repo2Docker(Application):
                 self.log.debug(picked_buildpack.render(),
                                extra=dict(phase='building'))
 
+                build_args = {
+                    'NB_USER': self.user_name,
+                    'NB_UID': str(self.user_id),
+                }
+                if self.target_repo_dir:
+                    build_args['REPO_DIR'] = self.target_repo_dir
+
+                if self.save_build_input:
+                    picked_buildpack.generate_build_input(
+                                                    self.output_image_spec,
+                                                    self.save_build_input,
+                                                    build_args)
+
                 if not self.dry_run:
-                    build_args = {
-                        'NB_USER': self.user_name,
-                        'NB_UID': str(self.user_id),
-                    }
-                    if self.target_repo_dir:
-                        build_args['REPO_DIR'] = self.target_repo_dir
-                    self.log.info('Using %s builder\n', bp.__class__.__name__,
+                        self.log.info('Using %s builder\n', bp.__class__.__name__,
                                   extra=dict(phase='building'))
 
                     for l in picked_buildpack.build(docker_client,
