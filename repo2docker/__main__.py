@@ -198,7 +198,7 @@ def get_argparser():
         default=[],
     )
 
-     argparser.add_argument(
+    argparser.add_argument(
         '--save-build-input',
         dest='save_build_input',
         type=str,
